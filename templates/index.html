@@ -1,0 +1,971 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Find your next favorite film with thoughtful, story-led movie recommendations."
+    />
+    <title>Movie Recommender System</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --background: #151513;
+        --surface: #1d1d1a;
+        --surface-raised: #242420;
+        --text: #f0eee8;
+        --muted: #a09f98;
+        --subtle: #72716a;
+        --line: #33332e;
+        --accent: #c9a989;
+        --serif: Georgia, "Times New Roman", serif;
+        --sans: "Segoe UI", Arial, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        min-width: 320px;
+        margin: 0;
+        background: var(--background);
+        color: var(--text);
+        font-family: var(--sans);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      button,
+      a {
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .shell {
+        width: min(1120px, calc(100% - 64px));
+        margin: 0 auto;
+      }
+
+      .topbar {
+        height: 82px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      }
+
+      .brand {
+        color: var(--text);
+        font-family: var(--serif);
+        font-size: 23px;
+        letter-spacing: -0.8px;
+        text-decoration: none;
+      }
+
+      .brand span {
+        color: var(--accent);
+      }
+
+      .topbar nav {
+        display: flex;
+        align-items: center;
+        gap: 34px;
+      }
+
+      .topbar nav a {
+        color: var(--muted);
+        font-size: 13px;
+        text-decoration: none;
+        transition: color 160ms ease;
+      }
+
+      .topbar nav a:hover,
+      .topbar nav a:focus-visible {
+        color: var(--text);
+      }
+
+      .hero {
+        padding: 108px 0 94px;
+        text-align: center;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0 0 24px;
+        color: var(--accent);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
+
+      .eyebrow::before,
+      .eyebrow::after {
+        width: 20px;
+        height: 1px;
+        background: var(--accent);
+        content: "";
+        opacity: 0.6;
+      }
+
+      h1 {
+        max-width: 760px;
+        margin: 0 auto;
+        font-family: var(--serif);
+        font-size: clamp(44px, 6vw, 72px);
+        font-weight: 400;
+        letter-spacing: -2.6px;
+        line-height: 1.08;
+      }
+
+      h1 em {
+        color: var(--accent);
+        font-weight: 400;
+      }
+
+      .hero-copy {
+        max-width: 470px;
+        margin: 20px auto 34px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.8;
+      }
+
+      .search-wrapper {
+        position: relative;
+        width: min(590px, 100%);
+        margin: 0 auto;
+      }
+
+      .search-form {
+        display: flex;
+        width: 100%;
+        min-height: 62px;
+        padding: 6px;
+        border: 1px solid #3b3a34;
+        border-radius: 6px;
+        background: var(--surface);
+        text-align: left;
+        transition:
+          border-color 160ms ease,
+          box-shadow 160ms ease;
+      }
+
+      .search-form:focus-within {
+        border-color: #82715f;
+        box-shadow: 0 0 0 3px rgba(201, 169, 137, 0.08);
+      }
+
+      .search-icon {
+        flex: 0 0 auto;
+        align-self: center;
+        width: 19px;
+        height: 19px;
+        margin: 0 13px 0 12px;
+        color: var(--muted);
+      }
+
+      .search-form input {
+        min-width: 0;
+        flex: 1;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: var(--text);
+        font-size: 14px;
+      }
+
+      .search-form input::placeholder {
+        color: #77766f;
+      }
+
+      .search-form button {
+        flex: 0 0 auto;
+        padding: 0 21px;
+        border: 0;
+        border-radius: 4px;
+        background: #d7c0a7;
+        color: #211d18;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        transition:
+          background 160ms ease,
+          transform 160ms ease,
+          opacity 160ms ease;
+      }
+
+      .search-form button:hover:not(:disabled) {
+        background: #e3d0bc;
+      }
+
+      .search-form button:active:not(:disabled) {
+        transform: scale(0.98);
+      }
+
+      .search-form button:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+      }
+
+      /* Autocomplete Dropdown */
+      .autocomplete-dropdown {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        right: 0;
+        background: var(--surface);
+        border: 1px solid #3b3a34;
+        border-radius: 6px;
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55);
+        z-index: 100;
+        max-height: 290px;
+        overflow-y: auto;
+        display: none;
+        text-align: left;
+      }
+
+      .autocomplete-dropdown.open {
+        display: block;
+      }
+
+      .autocomplete-item {
+        padding: 12px 18px;
+        cursor: pointer;
+        font-size: 14px;
+        color: var(--text);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: background 120ms ease;
+      }
+
+      .autocomplete-item:last-child {
+        border-bottom: none;
+      }
+
+      .autocomplete-item:hover,
+      .autocomplete-item.selected {
+        background: var(--surface-raised);
+        color: #fff;
+      }
+
+      .autocomplete-item .match {
+        color: var(--accent);
+        font-weight: 600;
+      }
+
+      .autocomplete-item .item-arrow {
+        color: var(--subtle);
+        font-size: 12px;
+      }
+
+      .search-hint {
+        margin: 13px 0 0;
+        color: var(--subtle);
+        font-size: 11px;
+      }
+
+      .hint-tag {
+        color: var(--accent);
+        cursor: pointer;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        transition: opacity 160ms ease;
+      }
+
+      .hint-tag:hover {
+        opacity: 0.8;
+      }
+
+      .content-section {
+        padding: 0 0 96px;
+      }
+
+      .section-heading {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 24px;
+        margin-bottom: 25px;
+      }
+
+      .section-kicker {
+        margin: 0 0 9px;
+        color: var(--subtle);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 1.7px;
+        text-transform: uppercase;
+      }
+
+      h2 {
+        margin: 0;
+        font-family: var(--serif);
+        font-size: 30px;
+        font-weight: 400;
+        letter-spacing: -0.7px;
+      }
+
+      h2 em {
+        color: var(--accent);
+        font-style: italic;
+      }
+
+      .section-note {
+        margin: 0 0 3px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      /* Loading State */
+      .loading-state {
+        display: none;
+        padding: 60px 20px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .loading-spinner {
+        width: 32px;
+        height: 32px;
+        border: 3px solid rgba(201, 169, 137, 0.2);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        margin: 0 auto 16px;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .movie-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 28px;
+      }
+
+      @media (min-width: 900px) {
+        .movie-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+
+      .movie-card {
+        min-width: 0;
+        animation: arrive 300ms ease both;
+        cursor: pointer;
+        transition: transform 220ms ease;
+      }
+
+      .movie-card:hover {
+        transform: translateY(-5px);
+      }
+
+      @keyframes arrive {
+        from {
+          transform: translateY(8px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .poster-wrap {
+        position: relative;
+        overflow: hidden;
+        aspect-ratio: 2 / 3;
+        border-radius: 6px;
+        background: var(--surface-raised);
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
+      }
+
+      .poster-wrap::after {
+        position: absolute;
+        inset: 45% 0 0;
+        background: linear-gradient(transparent, rgba(12, 12, 11, 0.5));
+        content: "";
+        pointer-events: none;
+      }
+
+      .poster {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+        transition:
+          transform 350ms ease,
+          opacity 180ms ease;
+      }
+
+      .movie-card:hover .poster {
+        transform: scale(1.035);
+      }
+
+      .poster-fallback {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 20px;
+        background:
+          radial-gradient(ellipse at 50% 30%, #51463b 0, transparent 53%),
+          linear-gradient(155deg, #34312c, #171715 76%);
+        color: #e8dfd3;
+        font-family: var(--serif);
+        font-size: clamp(18px, 2.5vw, 26px);
+        text-align: center;
+      }
+
+      .movie-card h3 {
+        overflow: hidden;
+        margin: 14px 0 6px;
+        color: var(--text);
+        font-family: var(--serif);
+        font-size: 17px;
+        font-weight: 400;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .movie-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .movie-meta .dot {
+        color: #65645e;
+      }
+
+      .rating {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        color: #d6bd9f;
+      }
+
+      .rating svg {
+        width: 12px;
+        height: 12px;
+      }
+
+      .empty-state {
+        display: none;
+        padding: 40px 20px;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.7;
+        text-align: center;
+      }
+
+      .empty-state strong {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--text);
+        font-family: var(--serif);
+        font-size: 20px;
+        font-weight: 400;
+      }
+
+      .footer {
+        padding: 24px 0 30px;
+        border-top: 1px solid rgba(255, 255, 255, 0.07);
+        color: var(--subtle);
+        font-size: 11px;
+        text-align: center;
+      }
+
+      @media (max-width: 760px) {
+        .shell {
+          width: min(100% - 40px, 600px);
+        }
+
+        .hero {
+          padding: 82px 0 72px;
+        }
+
+        .movie-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 27px 17px;
+        }
+
+        .content-section {
+          padding-bottom: 72px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .shell {
+          width: calc(100% - 36px);
+        }
+
+        .topbar {
+          height: 70px;
+        }
+
+        .topbar nav {
+          gap: 18px;
+        }
+
+        .topbar nav a {
+          font-size: 12px;
+        }
+
+        .hero {
+          padding: 69px 0 62px;
+        }
+
+        h1 {
+          letter-spacing: -1.7px;
+        }
+
+        .hero-copy {
+          margin: 17px auto 27px;
+          font-size: 13px;
+        }
+
+        .search-form {
+          min-height: 58px;
+        }
+
+        .search-form button {
+          padding: 0 14px;
+        }
+
+        .section-heading {
+          align-items: start;
+          flex-direction: column;
+          gap: 9px;
+          margin-bottom: 20px;
+        }
+
+        h2 {
+          font-size: 27px;
+        }
+
+        .movie-card h3 {
+          font-size: 15px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="shell topbar">
+      <a class="brand" href="/" aria-label="Movie Recommender System home">
+        Movie <span>Recommender</span>
+      </a>
+      <nav aria-label="Main navigation">
+        <!-- Optional navigation items -->
+      </nav>
+    </header>
+
+    <main>
+      <section class="shell hero" aria-labelledby="page-title">
+        <p class="eyebrow">A better kind of movie night</p>
+        <h1 id="page-title">Find a film that <em>feels right.</em></h1>
+        <p class="hero-copy">
+          Tell us what you love. We’ll find the stories, worlds, and unexpected
+          favorites you might want to watch next.
+        </p>
+
+        <div class="search-wrapper">
+          <form class="search-form" id="movie-search" role="search" onsubmit="return false;">
+            <svg
+              class="search-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <circle
+                cx="10.8"
+                cy="10.8"
+                r="6.8"
+                stroke="currentColor"
+                stroke-width="1.6"
+              />
+              <path
+                d="m16 16 4 4"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              />
+            </svg>
+            <input
+              id="movie-title"
+              name="movie"
+              type="search"
+              placeholder="Search for a film you love..."
+              aria-label="Search for a movie"
+              autocomplete="off"
+              required
+            />
+            <button type="submit" id="search-btn">Find films</button>
+          </form>
+
+          <!-- Custom styled autocomplete dropdown -->
+          <div
+            id="autocomplete-dropdown"
+            class="autocomplete-dropdown"
+            role="listbox"
+            aria-label="Movie suggestions"
+          ></div>
+        </div>
+
+        <p class="search-hint">
+          Start with a favorite — like
+          <span class="hint-tag" data-movie="Inception">Inception</span>,
+          <span class="hint-tag" data-movie="Interstellar">Interstellar</span>, or
+          <span class="hint-tag" data-movie="Arrival">Arrival</span>
+        </p>
+      </section>
+
+      <section
+        class="shell content-section"
+        id="discover"
+        aria-labelledby="results-title"
+        hidden
+      >
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker" id="results-kicker">Recommendations</p>
+            <h2 id="results-title">Recommended movies</h2>
+          </div>
+          <p class="section-note" id="results-note">Based on your search</p>
+        </div>
+
+        <div class="loading-state" id="loading-state">
+          <div class="loading-spinner"></div>
+          <p>Finding films with similar essence...</p>
+        </div>
+
+        <div class="movie-grid" id="movie-grid" aria-live="polite"></div>
+
+        <div class="empty-state" id="empty-state" role="status">
+          <strong id="empty-title">No match found</strong>
+          <span id="empty-desc">
+            Try searching for Inception, Interstellar, Arrival, Parasite,
+            Whiplash, The Dark Knight, or The Grand Budapest Hotel.
+          </span>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer" id="about">
+      <div class="shell">Made for the love of a good story.</div>
+    </footer>
+
+    <script>
+      const searchForm = document.getElementById("movie-search");
+      const searchInput = document.getElementById("movie-title");
+      const searchBtn = document.getElementById("search-btn");
+      const dropdown = document.getElementById("autocomplete-dropdown");
+      const discoverSection = document.getElementById("discover");
+      const resultsTitle = document.getElementById("results-title");
+      const resultsNote = document.getElementById("results-note");
+      const movieGrid = document.getElementById("movie-grid");
+      const loadingState = document.getElementById("loading-state");
+      const emptyState = document.getElementById("empty-state");
+      const emptyTitle = document.getElementById("empty-title");
+      const emptyDesc = document.getElementById("empty-desc");
+
+      let currentSuggestions = [];
+      let selectedIndex = -1;
+      let debounceTimer = null;
+
+      function escapeHtml(str) {
+        if (!str) return "";
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function highlightMatch(text, query) {
+        if (!query) return escapeHtml(text);
+        const idx = text.toLowerCase().indexOf(query.toLowerCase());
+        if (idx === -1) return escapeHtml(text);
+        const before = text.slice(0, idx);
+        const match = text.slice(idx, idx + query.length);
+        const after = text.slice(idx + query.length);
+        return `${escapeHtml(before)}<span class="match">${escapeHtml(match)}</span>${escapeHtml(after)}`;
+      }
+
+      // Fetch suggestions as user types
+      async function fetchSuggestions(query) {
+        if (!query || query.trim().length === 0) {
+          closeDropdown();
+          return;
+        }
+
+        try {
+          const res = await fetch(`/api/suggestions?q=${encodeURIComponent(query.trim())}`);
+          if (!res.ok) return;
+          const data = await res.json();
+          currentSuggestions = data.suggestions || [];
+          renderSuggestions(query.trim());
+        } catch (err) {
+          console.error("Error fetching suggestions:", err);
+        }
+      }
+
+      function renderSuggestions(query) {
+        if (currentSuggestions.length === 0) {
+          closeDropdown();
+          return;
+        }
+
+        selectedIndex = -1;
+        dropdown.innerHTML = currentSuggestions
+          .map(
+            (title, idx) => `
+            <div class="autocomplete-item" data-index="${idx}" data-value="${escapeHtml(title)}" role="option">
+              <span>${highlightMatch(title, query)}</span>
+              <span class="item-arrow">↵</span>
+            </div>
+          `
+          )
+          .join("");
+
+        dropdown.classList.add("open");
+
+        // Click handlers on items
+        dropdown.querySelectorAll(".autocomplete-item").forEach((item) => {
+          item.addEventListener("click", () => {
+            const val = item.getAttribute("data-value");
+            searchInput.value = val;
+            closeDropdown();
+            getRecommendations(val);
+          });
+        });
+      }
+
+      function closeDropdown() {
+        dropdown.classList.remove("open");
+        dropdown.innerHTML = "";
+        selectedIndex = -1;
+      }
+
+      // Input event listener with debounce
+      searchInput.addEventListener("input", (e) => {
+        clearTimeout(debounceTimer);
+        const val = e.target.value;
+        debounceTimer = setTimeout(() => {
+          fetchSuggestions(val);
+        }, 180);
+      });
+
+      // Keyboard navigation for autocomplete
+      searchInput.addEventListener("keydown", (e) => {
+        const items = dropdown.querySelectorAll(".autocomplete-item");
+        if (e.key === "ArrowDown") {
+          if (!dropdown.classList.contains("open") || items.length === 0) return;
+          e.preventDefault();
+          selectedIndex = (selectedIndex + 1) % items.length;
+          updateSelectedSuggestion(items);
+        } else if (e.key === "ArrowUp") {
+          if (!dropdown.classList.contains("open") || items.length === 0) return;
+          e.preventDefault();
+          selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+          updateSelectedSuggestion(items);
+        } else if (e.key === "Enter") {
+          if (dropdown.classList.contains("open") && selectedIndex >= 0 && items[selectedIndex]) {
+            e.preventDefault();
+            const val = items[selectedIndex].getAttribute("data-value");
+            searchInput.value = val;
+            closeDropdown();
+            getRecommendations(val);
+          } else {
+            e.preventDefault();
+            closeDropdown();
+            getRecommendations(searchInput.value);
+          }
+        } else if (e.key === "Escape") {
+          closeDropdown();
+        }
+      });
+
+      function updateSelectedSuggestion(items) {
+        items.forEach((item, idx) => {
+          if (idx === selectedIndex) {
+            item.classList.add("selected");
+            item.scrollIntoView({ block: "nearest" });
+            searchInput.value = item.getAttribute("data-value");
+          } else {
+            item.classList.remove("selected");
+          }
+        });
+      }
+
+      // Close dropdown when clicking outside
+      document.addEventListener("click", (e) => {
+        if (!searchForm.contains(e.target) && !dropdown.contains(e.target)) {
+          closeDropdown();
+        }
+      });
+
+      // Form submission
+      searchForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        closeDropdown();
+        getRecommendations(searchInput.value);
+      });
+
+      // Quick hint tags
+      document.querySelectorAll(".hint-tag").forEach((tag) => {
+        tag.addEventListener("click", () => {
+          const movie = tag.getAttribute("data-movie");
+          searchInput.value = movie;
+          closeDropdown();
+          getRecommendations(movie);
+        });
+      });
+
+      // Fetch and display recommendations
+      async function getRecommendations(movieName) {
+        const cleanName = (movieName || "").trim();
+        if (!cleanName) return;
+
+        // UI Loading State
+        discoverSection.removeAttribute("hidden");
+        loadingState.style.display = "block";
+        movieGrid.style.display = "none";
+        emptyState.style.display = "none";
+        movieGrid.innerHTML = "";
+        searchBtn.disabled = true;
+        searchBtn.textContent = "Finding...";
+
+        resultsTitle.innerHTML = `Searching for <em>"${escapeHtml(cleanName)}"</em>`;
+        resultsNote.textContent = "Fetching recommendations...";
+
+        // Scroll to discover section
+        discoverSection.scrollIntoView({ behavior: "smooth", block: "start" });
+
+        try {
+          const res = await fetch(`/api/recommend?movie=${encodeURIComponent(cleanName)}`);
+          const data = await res.json();
+
+          loadingState.style.display = "none";
+
+          if (res.ok && data.success && data.recommendations && data.recommendations.length > 0) {
+            resultsTitle.innerHTML = `Because you liked <em>"${escapeHtml(data.searched_movie)}"</em>`;
+            resultsNote.textContent = `Found ${data.recommendations.length} similar films`;
+
+            movieGrid.innerHTML = data.recommendations
+              .map((movie) => renderMovieCard(movie))
+              .join("");
+
+            // Add click listeners to movie cards for instant exploration
+            movieGrid.querySelectorAll(".movie-card").forEach((card) => {
+              card.addEventListener("click", () => {
+                const title = card.getAttribute("data-title");
+                if (title) {
+                  searchInput.value = title;
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                  setTimeout(() => getRecommendations(title), 350);
+                }
+              });
+            });
+
+            movieGrid.style.display = "grid";
+          } else {
+            showEmptyState(
+              "No match in our collection",
+              data.error || "We couldn't find matches for this movie. Try another title like Inception, Avatar, or Interstellar."
+            );
+          }
+        } catch (err) {
+          console.error("Error getting recommendations:", err);
+          loadingState.style.display = "none";
+          showEmptyState(
+            "Service temporarily unavailable",
+            "There was an error connecting to the recommendation service. Please try again in a moment."
+          );
+        } finally {
+          searchBtn.disabled = false;
+          searchBtn.textContent = "Find films";
+        }
+      }
+
+      function showEmptyState(title, desc) {
+        movieGrid.style.display = "none";
+        emptyTitle.textContent = title;
+        emptyDesc.textContent = desc;
+        emptyState.style.display = "block";
+        resultsTitle.innerHTML = "No recommendations found";
+        resultsNote.textContent = "Please try another search";
+      }
+
+      function renderMovieCard(movie) {
+        const title = escapeHtml(movie.title || "Untitled");
+        const posterImg = movie.poster_link
+          ? `<img class="poster" src="${escapeHtml(movie.poster_link)}" alt="${title} poster" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';">`
+          : "";
+        const fallbackDisplay = movie.poster_link ? "display: none;" : "display: grid;";
+
+        const ratingHtml = movie.rating
+          ? `<span class="rating" title="Rating: ${movie.rating}/10">
+               <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                 <path d="m12 17.27 6.18 3.73-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73-1.64 7.03L12 17.27z"/>
+               </svg>
+               ${movie.rating}
+             </span>
+             <span class="dot">•</span>`
+          : "";
+
+        const yearHtml = movie.year ? `<span>${escapeHtml(movie.year)}</span>` : "<span>Film</span>";
+
+        return `
+          <article class="movie-card" data-title="${title}" tabindex="0" role="button" title="Click to find movies like ${title}">
+            <div class="poster-wrap">
+              ${posterImg}
+              <div class="poster-fallback" style="${fallbackDisplay}">
+                <span>${title}</span>
+              </div>
+            </div>
+            <h3>${title}</h3>
+            <div class="movie-meta">
+              ${ratingHtml}
+              ${yearHtml}
+            </div>
+          </article>
+        `;
+      }
+    </script>
+  </body>
+</html>

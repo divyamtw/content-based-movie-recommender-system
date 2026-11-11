@@ -50,3 +50,5 @@ tensorboard/
 Thumbs.db
 .vscode/
 .idea/
+
+*.pkl
